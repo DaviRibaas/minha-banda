@@ -1,15 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const GENRES = ["Rock", "Metal", "Pop", "Jazz", "MPB", "Samba", "Funk", "Eletrônico", "Clássico", "Blues"];
 const INSTRUMENTS = ["Guitarra", "Baixo", "Bateria", "Teclado", "Violão", "Voz", "Saxofone", "Trompete", "Violino", "Outros"];
 
-const styles = {
-  "@import": "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap",
-};
-
 export default function AuthPage() {
-  const [mode, setMode] = useState("login"); // "login" | "register"
-  const [step, setStep] = useState(1); // cadastro em 2 etapas
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("login");
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     name: "", email: "", password: "", confirmPassword: "",
     instrument: "", genres: [], city: "", bio: "", lookingFor: [],
@@ -46,11 +44,19 @@ export default function AuthPage() {
     return Object.keys(e).length === 0;
   };
 
+  // Redireciona para /discover quando success vira true
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => navigate('/discover'), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
+
   const handleSubmit = () => {
     if (!validate()) return;
     if (mode === "register" && step === 1) { setStep(2); return; }
     setLoading(true);
-    setTimeout(() => { setLoading(false); setSuccess(true); }, 1500);
+    setTimeout(() => { setLoading(false); setSuccess(true); }, 1000);
   };
 
   if (success) {
@@ -60,7 +66,7 @@ export default function AuthPage() {
         <div style={css.card}>
           <div style={{ textAlign: "center", padding: "2rem 0" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>🎸</div>
-            <h2 style={css.successTitle}>Bem-vindo ao BandMatch!</h2>
+            <h2 style={css.successTitle}>Bem-vindo ao MusiJoin!</h2>
             <p style={css.successSub}>
               {mode === "login" ? "Entrando no app…" : "Sua conta foi criada. Vamos encontrar sua banda!"}
             </p>
@@ -81,24 +87,15 @@ export default function AuthPage() {
         button:active { transform: scale(0.97); }
         .chip { transition: all 0.15s; cursor: pointer; }
         .chip:hover { border-color: #c084fc !important; color: #c084fc !important; }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fill {
-          from { width: 0% }
-          to { width: 100% }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fill { from { width: 0% } to { width: 100% } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .card-anim { animation: fadeUp 0.5s ease forwards; }
       `}</style>
 
       <Background />
 
-      {/* Left panel — branding */}
       <div style={css.left}>
         <div style={{ animation: "float 4s ease-in-out infinite" }}>
           <div style={css.brandIcon}>🎸</div>
@@ -112,7 +109,6 @@ export default function AuthPage() {
         </div>
       </div>
 
-     
       <div style={css.right}>
         <div style={css.card} className="card-anim">
           <div style={css.tabs}>
@@ -163,7 +159,6 @@ export default function AuthPage() {
           {mode === "register" && step === 2 && (
             <div>
               <h2 style={css.formTitle}>Seu perfil musical</h2>
-
               <label style={css.label}>Instrumento principal</label>
               <div style={css.chipGrid}>
                 {INSTRUMENTS.map(inst => (
@@ -173,7 +168,6 @@ export default function AuthPage() {
                 ))}
               </div>
               {errors.instrument && <span style={css.error}>{errors.instrument}</span>}
-
               <label style={{ ...css.label, marginTop: 16 }}>Gêneros musicais</label>
               <div style={css.chipGrid}>
                 {GENRES.map(g => (
@@ -183,11 +177,9 @@ export default function AuthPage() {
                 ))}
               </div>
               {errors.genres && <span style={css.error}>{errors.genres}</span>}
-
               <Field label="Cidade" placeholder="Ex: São Paulo, SP"
                 value={form.city} onChange={v => set("city", v)} error={errors.city}
                 style={{ marginTop: 16 }} />
-
               <label style={css.label}>Mini bio (opcional)</label>
               <textarea
                 placeholder="Conte um pouco sobre você e o que você toca…"
@@ -196,7 +188,6 @@ export default function AuthPage() {
                 style={css.textarea}
                 rows={3}
               />
-
               <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                 <button onClick={() => setStep(1)} style={css.backBtn}>← Voltar</button>
                 <SubmitBtn loading={loading} onClick={handleSubmit} style={{ flex: 1 }}>
@@ -276,129 +267,41 @@ function Background() {
 }
 
 const css = {
-  page: {
-    minHeight: "100vh",
-    background: "#0d0d14",
-    display: "flex",
-    fontFamily: "'DM Sans', sans-serif",
-    position: "relative",
-    overflow: "hidden",
-  },
-  bgWrap: {
-    position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-  },
-  glow1: {
-    position: "absolute", width: 600, height: 600, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 70%)",
-    top: "10%", left: "30%", transform: "translate(-50%,-50%)",
-  },
-  glow2: {
-    position: "absolute", width: 400, height: 400, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 70%)",
-    bottom: "10%", right: "20%",
-  },
-  left: {
-    flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-    justifyContent: "center", position: "relative", zIndex: 1, padding: "2rem",
-  },
+  page: { minHeight: "100vh", background: "#0d0d14", display: "flex", fontFamily: "'DM Sans', sans-serif", position: "relative", overflow: "hidden" },
+  bgWrap: { position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" },
+  glow1: { position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 70%)", top: "10%", left: "30%", transform: "translate(-50%,-50%)" },
+  glow2: { position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(96,165,250,0.06) 0%, transparent 70%)", bottom: "10%", right: "20%" },
+  left: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1, padding: "2rem" },
   brandIcon: { fontSize: 72, marginBottom: 16 },
-  brandName: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 52, fontWeight: 900, color: "#fff",
-    margin: 0, letterSpacing: -1,
-  },
-  brandTagline: {
-    color: "#9d9db5", fontSize: 18, textAlign: "center",
-    lineHeight: 1.6, marginTop: 12, fontWeight: 300,
-  },
+  brandName: { fontFamily: "'Playfair Display', serif", fontSize: 52, fontWeight: 900, color: "#fff", margin: 0, letterSpacing: -1 },
+  brandTagline: { color: "#9d9db5", fontSize: 18, textAlign: "center", lineHeight: 1.6, marginTop: 12, fontWeight: 300 },
   floatingNotes: { position: "absolute", inset: 0, pointerEvents: "none" },
-  note: {
-    position: "absolute", fontSize: 24, opacity: 0.15,
-    animation: "float 3s ease-in-out infinite",
-  },
-  right: {
-    width: 460, display: "flex", alignItems: "center", justifyContent: "center",
-    padding: "2rem", position: "relative", zIndex: 1,
-  },
-  card: {
-    width: "100%", background: "#16161f",
-    borderRadius: 20, padding: "2rem",
-    border: "1px solid #2d2d3d",
-  },
+  note: { position: "absolute", fontSize: 24, opacity: 0.15, animation: "float 3s ease-in-out infinite" },
+  right: { width: 460, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", zIndex: 1 },
+  card: { width: "100%", background: "#16161f", borderRadius: 20, padding: "2rem", border: "1px solid #2d2d3d" },
   tabs: { display: "flex", marginBottom: 28, background: "#0d0d14", borderRadius: 12, padding: 4 },
-  tab: {
-    flex: 1, padding: "10px", border: "none", borderRadius: 8, cursor: "pointer",
-    background: "transparent", color: "#6b6b7a", fontSize: 15, fontFamily: "'DM Sans', sans-serif",
-    fontWeight: 500, transition: "all 0.2s",
-  },
+  tab: { flex: 1, padding: "10px", border: "none", borderRadius: 8, cursor: "pointer", background: "transparent", color: "#6b6b7a", fontSize: 15, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, transition: "all 0.2s" },
   tabActive: { background: "#1e1e2e", color: "#c084fc" },
   stepRow: { display: "flex", alignItems: "center", marginBottom: 24, gap: 8 },
-  stepDot: {
-    width: 28, height: 28, borderRadius: "50%",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
-    transition: "background 0.3s",
-  },
+  stepDot: { width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0, transition: "background 0.3s" },
   stepLine: { flex: 1, height: 2, borderRadius: 1, transition: "background 0.3s" },
   stepLabel: { color: "#9d9db5", fontSize: 13, marginLeft: 4 },
-  formTitle: {
-    fontFamily: "'Playfair Display', serif",
-    color: "#fff", fontSize: 24, fontWeight: 700,
-    marginBottom: 24, marginTop: 0,
-  },
+  formTitle: { fontFamily: "'Playfair Display', serif", color: "#fff", fontSize: 24, fontWeight: 700, marginBottom: 24, marginTop: 0 },
   label: { display: "block", color: "#9d9db5", fontSize: 13, marginBottom: 6, fontWeight: 500 },
-  input: {
-    width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d",
-    borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 15,
-    fontFamily: "'DM Sans', sans-serif", transition: "border-color 0.2s",
-  },
-  textarea: {
-    width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d",
-    borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 14,
-    fontFamily: "'DM Sans', sans-serif", resize: "vertical",
-    outline: "none", marginBottom: 4,
-  },
+  input: { width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d", borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 15, fontFamily: "'DM Sans', sans-serif", transition: "border-color 0.2s" },
+  textarea: { width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d", borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 14, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none", marginBottom: 4 },
   error: { color: "#f87171", fontSize: 12, marginTop: 4, display: "block" },
   link: { color: "#c084fc", fontSize: 13, textDecoration: "none" },
-  submitBtn: {
-    width: "100%", background: "linear-gradient(135deg, #9333ea, #7c3aed)",
-    color: "#fff", border: "none", borderRadius: 12, padding: "13px",
-    fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-    transition: "opacity 0.2s, transform 0.15s",
-    display: "flex", alignItems: "center", justifyContent: "center",
-  },
-  backBtn: {
-    background: "transparent", border: "1px solid #2d2d3d",
-    color: "#9d9db5", borderRadius: 12, padding: "13px 20px",
-    cursor: "pointer", fontSize: 14, fontFamily: "'DM Sans', sans-serif",
-  },
-  socialBtn: {
-    width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d",
-    color: "#fff", borderRadius: 12, padding: "12px",
-    fontSize: 15, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-  },
-  socialIcon: {
-    width: 24, height: 24, background: "#fff", borderRadius: "50%",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#1a1a2e", fontSize: 12, fontWeight: 900,
-  },
+  submitBtn: { width: "100%", background: "linear-gradient(135deg, #9333ea, #7c3aed)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "opacity 0.2s, transform 0.15s", display: "flex", alignItems: "center", justifyContent: "center" },
+  backBtn: { background: "transparent", border: "1px solid #2d2d3d", color: "#9d9db5", borderRadius: 12, padding: "13px 20px", cursor: "pointer", fontSize: 14, fontFamily: "'DM Sans', sans-serif" },
+  socialBtn: { width: "100%", background: "#0d0d14", border: "1px solid #2d2d3d", color: "#fff", borderRadius: 12, padding: "12px", fontSize: 15, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 },
+  socialIcon: { width: 24, height: 24, background: "#fff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#1a1a2e", fontSize: 12, fontWeight: 900 },
   chipGrid: { display: "flex", flexWrap: "wrap", gap: 8 },
-  chip: {
-    padding: "6px 13px", borderRadius: 20, fontSize: 13,
-    border: "1px solid #2d2d3d", color: "#9d9db5", userSelect: "none",
-  },
+  chip: { padding: "6px 13px", borderRadius: 20, fontSize: 13, border: "1px solid #2d2d3d", color: "#9d9db5", userSelect: "none" },
   chipActive: { background: "#1e1e2e", borderColor: "#c084fc", color: "#c084fc" },
-  spinner: {
-    width: 20, height: 20, border: "2px solid rgba(255,255,255,0.3)",
-    borderTopColor: "#fff", borderRadius: "50%",
-    animation: "spin 0.7s linear infinite", display: "inline-block",
-  },
+  spinner: { width: 20, height: 20, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" },
   progressBar: { width: "100%", height: 4, background: "#2d2d3d", borderRadius: 2, marginTop: 24 },
   progressFill: { height: "100%", background: "#9333ea", borderRadius: 2, animation: "fill 1.5s ease forwards" },
-  successTitle: {
-    fontFamily: "'Playfair Display', serif",
-    color: "#fff", fontSize: 26, margin: "0 0 8px",
-  },
+  successTitle: { fontFamily: "'Playfair Display', serif", color: "#fff", fontSize: 26, margin: "0 0 8px" },
   successSub: { color: "#9d9db5", fontSize: 15 },
 };
